@@ -10,17 +10,11 @@ import com.baidu.bikenavi_demo.floating.data.RGDataOBS;
 import com.baidu.bikenavi_demo.util.ITrace;
 import com.baidu.bikenavi_demo.util.WalkBikeTrackFileUtil;
 
-import com.baidu.location.BDLocation;
-import com.baidu.location.LocationClient;
 import com.baidu.mapapi.bikenavi.BikeNavigateHelper;
 import com.baidu.mapapi.bikenavi.adapter.IBEngineInitListener;
 import com.baidu.mapapi.bikenavi.adapter.IBNaviCalcRouteListener;
-import com.baidu.mapapi.bikenavi.adapter.IBRouteGuidanceListener;
 import com.baidu.mapapi.bikenavi.adapter.IBRoutePlanListener;
-import com.baidu.mapapi.bikenavi.model.BikeRouteDetailInfo;
 import com.baidu.mapapi.bikenavi.model.BikeRoutePlanError;
-import com.baidu.mapapi.bikenavi.model.BikeSimpleMapInfo;
-import com.baidu.mapapi.bikenavi.model.IBRouteIconInfo;
 import com.baidu.mapapi.bikenavi.params.BikeNaviLaunchParam;
 import com.baidu.mapapi.bikenavi.params.BikeRouteNodeInfo;
 import com.baidu.mapapi.bikenavi.params.BikeRouteNodeType;
@@ -42,6 +36,7 @@ import com.baidu.mapapi.map.Overlay;
 import com.baidu.mapapi.map.Polygon;
 import com.baidu.mapapi.map.Polyline;
 import com.baidu.mapapi.model.LatLng;
+import com.baidu.mapapi.offscreen.IBackgroundMapView;
 import com.baidu.mapapi.walknavi.WalkNavigateHelper;
 import com.baidu.mapapi.walknavi.adapter.IWEngineInitListener;
 import com.baidu.mapapi.walknavi.adapter.IWNaviCalcRouteListener;
@@ -64,7 +59,7 @@ import android.Manifest;
 import android.app.Activity;
 import android.content.Intent;
 import android.content.pm.PackageManager;
-import android.graphics.drawable.Drawable;
+import android.graphics.drawable.BitmapDrawable;
 import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
@@ -75,9 +70,10 @@ import android.view.View;
 import android.widget.Button;
 import android.widget.CheckBox;
 import android.widget.CompoundButton;
+import android.widget.ImageView;
 import android.widget.Toast;
 
-public class BNaviMainActivity extends Activity implements ITrace {
+public class BNaviMainActivity extends BaseActivity implements ITrace {
 
     private final static String TAG = BNaviMainActivity.class.getSimpleName();
     private MapView mMapView;
@@ -89,7 +85,7 @@ public class BNaviMainActivity extends Activity implements ITrace {
 
     private LatLng startPt;
     private LatLng endPt;
-    private Button bikeBtn;
+    private boolean hasAuth;
     private Button bikeBtn1;
 
     private enum naviType {
@@ -203,7 +199,6 @@ public class BNaviMainActivity extends Activity implements ITrace {
         Button btnMultiWalkNavi = (Button) findViewById(R.id.btnMultiWalkNavi);
         btnMultiWalkNavi.setOnClickListener(v -> {
             tryClearPolylines();
-            mWalkParam.extraNaviMode(0);
             handleMultiWalkNaviClicked();
         });
 
@@ -215,6 +210,7 @@ public class BNaviMainActivity extends Activity implements ITrace {
                 handleMultiWalkSearchNaviClicked();
             }
         });
+        backgroundNavi();
 
         // 骑行多路线
         findViewById(R.id.btnBikeMultipleRoute).setOnClickListener(new View.OnClickListener() {
@@ -249,7 +245,7 @@ public class BNaviMainActivity extends Activity implements ITrace {
                     Intent intent = new Intent(Settings.ACTION_MANAGE_OVERLAY_PERMISSION,
                             Uri.parse("package:" + getPackageName()));
                     startActivity(intent);
-                    Toast.makeText(this, "请先授予悬浮窗权限", Toast.LENGTH_SHORT).show();
+                    toast("请先授予悬浮窗权限");
                 } else {
                     startFloatingWindowService();
                 }
@@ -308,6 +304,44 @@ public class BNaviMainActivity extends Activity implements ITrace {
         registerListener();
     }
 
+    private void backgroundNavi() {
+        ImageView bkgMapView = findViewById(R.id.background_draw_map_view);
+        findViewById(R.id.backNaviStart).setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                toast("长按进入前台导航");
+                bkgMapView.setVisibility(View.VISIBLE);
+                BackgroundNaviService.setScreenShotCallback(new IBackgroundMapView.IScreenShotCallback() {
+                    @Override
+                    public void onScreenShot(BitmapDrawable bitmap) {
+                        bkgMapView.setImageBitmap(bitmap.getBitmap());
+                    }
+                });
+                Intent intent = new Intent(BNaviMainActivity.this, BackgroundNaviService.class);
+                intent.putExtra("type", 1);
+                startService(intent);
+            }
+        });
+        findViewById(R.id.backNaviStart).setOnLongClickListener(new View.OnLongClickListener() {
+            @Override
+            public boolean onLongClick(View v) {
+                if (WalkNavigateHelper.getInstance().isNavigating()) {
+                    WNaviGuideActivity.startActivity(BNaviMainActivity.this);
+                } else {
+                    toast("导航未启动");
+                }
+                return true;
+            }
+        });
+        findViewById(R.id.backNaviEnd).setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                bkgMapView.setVisibility(View.GONE);
+                stopService(new Intent(BNaviMainActivity.this, BackgroundNaviService.class));
+            }
+        });
+    }
+
     private void registerListener() {
         mMapView.getMap().setOnMapClickListener(new BaiduMap.OnMapClickListener() {
             @Override
@@ -340,7 +374,7 @@ public class BNaviMainActivity extends Activity implements ITrace {
                     WalkNavigateHelper.getInstance().naviCalcRoute(routeIndex, new IWNaviCalcRouteListener() {
                         @Override
                         public void onNaviCalcRouteSuccess() {
-                            WalkMultiActivity.showActivity(BNaviMainActivity.this);
+                            WNaviGuideActivity.startActivity(BNaviMainActivity.this);
 
 //                            List<Overlay> overlays = new ArrayList<>(1);
 //                            overlays.add(polyline);
@@ -379,7 +413,7 @@ public class BNaviMainActivity extends Activity implements ITrace {
 //                                overlay.remove();
 //                            }
 
-                            BikeNaviMultiActivity.showActivity(BNaviMainActivity.this);
+                            BNaviGuideActivity.showActivity(BNaviMainActivity.this);
                         }
 
                         @Override
@@ -551,10 +585,6 @@ public class BNaviMainActivity extends Activity implements ITrace {
         });
     }
 
-    private void toast(String s) {
-        Toast.makeText(this, s, Toast.LENGTH_SHORT).show();
-    }
-
     /**
      * 开始骑行导航
      */
@@ -592,11 +622,11 @@ public class BNaviMainActivity extends Activity implements ITrace {
     private void startWalkNavi() {
         Log.d(TAG, "startWalkNavi");
         try {
+            // SDK如果当前骑行导航已经初始化完成需要先调用unInitNaviEngine在进行步行导航的初始化
             if (mNaviType == naviType.BIKENAVI && BikeNavigateHelper.getInstance().isInitEngine()) {
                 BikeNavigateHelper.getInstance().unInitNaviEngine();
             }
             mNaviType = naviType.WALKNAVI;
-            authWalk();
             WalkNavigateHelper.getInstance().initNaviEngine(getApplicationContext(), new EngineOptions.Builder()
                     .setLanguageType(MapLanguage.ENGLISH)
                     .build(), new IWEngineInitListener() {
@@ -689,7 +719,10 @@ public class BNaviMainActivity extends Activity implements ITrace {
                 WalkNavigateHelper.getInstance().unInitNaviEngine();
             }
             mNaviType = naviType.BIKENAVI;
-            authBike();
+            licAuth();
+            if (!hasAuth) {
+                return;
+            }
             EngineOptions options = new EngineOptions.Builder()
                     .setLanguageType(MapLanguage.CHINESE)
                     .setRouteCustomWidthExt(11)
@@ -722,8 +755,16 @@ public class BNaviMainActivity extends Activity implements ITrace {
                 BikeNavigateHelper.getInstance().unInitNaviEngine();
             }
             mNaviType = naviType.WALKNAVI;
-            authWalk();
-            WalkNavigateHelper.getInstance().initNaviEngine(this.getApplicationContext(), new IWEngineInitListener() {
+            licAuth();
+            if (!hasAuth) {
+                return;
+            }
+            EngineOptions options = new EngineOptions.Builder()
+                    .setLanguageType(MapLanguage.CHINESE)
+                    .setRouteCustomWidthExt(11)
+                    .enableLog(true)
+                    .build();
+            WalkNavigateHelper.getInstance().initNaviEngine(this.getApplicationContext(), options, new IWEngineInitListener() {
                 @Override
                 public void engineInitSuccess() {
                     Log.d(TAG, "WalkNavi engineInitSuccess");
@@ -780,7 +821,6 @@ public class BNaviMainActivity extends Activity implements ITrace {
                 BikeNavigateHelper.getInstance().unInitNaviEngine();
             }
             mNaviType = naviType.WALKNAVI;
-            authWalk();
             WalkNavigateHelper.getInstance().initNaviEngine(this.getApplicationContext(),
                     new EngineOptions.Builder()
                             .setLanguageType(MapLanguage.ENGLISH)
@@ -789,9 +829,6 @@ public class BNaviMainActivity extends Activity implements ITrace {
                         @Override
                         public void engineInitSuccess() {
                             Log.d(TAG, "WalkNavi engineInitSuccess");
-                            // 创建多实例窗口并设置类型
-                            MultiNaviViewProvider.IMultiNaviViewProxy multiNaviView = MultiNaviViewProvider.getInstance().createDefaultMultiNaviView(BNaviMainActivity.this);
-                            multiNaviView.setNaviType(IMultiNaviView.TYPE_NAVI_WALK);
                             routePlanMultiSearchNaviWithWalkParam();
                         }
 
@@ -1052,44 +1089,12 @@ public class BNaviMainActivity extends Activity implements ITrace {
     }
 
     /**
-     * 骑行license鉴权
+     * license鉴权
      */
-    private void authBike() {
-        BikeNavigateHelper.getInstance().getAuthManager().addAuthListener(new IBWAuthListener() {
-            @Override
-            public void auth(BWAuthResult result) {
-                authTip(result.getErrorCode());
-                Log.i(TAG, "BWAuthResult: " + result);
-
-                for (BWAuthFuncResult bwAuthFuncResult :
-                        result.getBWAuthFuncResults()) {
-                    switch (bwAuthFuncResult.getFuncType()) {
-                        case AuthorizeServiceType.TYPE_AUTHORIZE_SERVICE_RIDING_NAVI_MULTI:
-                            if (bwAuthFuncResult.getActiveStatus() == LicenseCode.CODE_LICENSE_SERVICE_NO_ERROR) {
-                                // 表示多实例有权限
-                                Toast.makeText(BNaviMainActivity.this, "多实例有权限", Toast.LENGTH_SHORT).show();
-                            }
-                            break;
-                        case AuthorizeServiceType.TYPE_AUTHORIZE_SERVICE_RIDING_GUIDE_INFO:
-                            if (bwAuthFuncResult.getActiveStatus() == LicenseCode.CODE_LICENSE_SERVICE_NO_ERROR) {
-                                // 表示行中诱导数据有权限
-                                Toast.makeText(BNaviMainActivity.this, "诱导数据有权限", Toast.LENGTH_SHORT).show();
-
-                            }
-                            break;
-                    }
-                }
-            }
-        });
-        // 激活ak下所有的配额（目前有多实例和诱导数据透出）
-        BikeNavigateHelper.getInstance().getAuthManager().loadAuth(getApplicationContext(), BWAuthLicenseType.AUTH_TYPE_MULTI_MAP, false);
-
-    }
-
-    /**
-     * 步行license鉴权
-     */
-    private void authWalk() {
+    private void licAuth() {
+        if (hasAuth) {
+            return;
+        }
         WalkNavigateHelper.getInstance().getAuthManager().addAuthListener(new IBWAuthListener() {
             @Override
             public void auth(BWAuthResult result) {
@@ -1102,6 +1107,7 @@ public class BNaviMainActivity extends Activity implements ITrace {
                             if (bwAuthFuncResult.getActiveStatus() == LicenseCode.CODE_LICENSE_SERVICE_NO_ERROR) {
                                 // 表示多实例有权限
                                 Toast.makeText(BNaviMainActivity.this, "多实例有权限", Toast.LENGTH_SHORT).show();
+                                hasAuth = true;
                             }
                             break;
                         case AuthorizeServiceType.TYPE_AUTHORIZE_SERVICE_RIDING_GUIDE_INFO:
@@ -1115,8 +1121,6 @@ public class BNaviMainActivity extends Activity implements ITrace {
                 }
             }
         });
-        // 加载ak下所有的配额（目前有多实例和诱导数据透出）
-        WalkNavigateHelper.getInstance().getAuthManager().loadAuth(getApplicationContext(), BWAuthLicenseType.AUTH_TYPE_ALL, false);
-
+        WalkNavigateHelper.getInstance().getAuthManager().loadAuth(getApplicationContext(), BWAuthLicenseType.AUTH_TYPE_ALL, true);
     }
 }

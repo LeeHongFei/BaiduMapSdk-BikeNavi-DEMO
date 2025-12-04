@@ -7,7 +7,6 @@ import android.app.Activity;
 import android.content.Context;
 import android.content.Intent;
 import android.content.pm.PackageManager;
-import android.graphics.Bitmap;
 import android.graphics.drawable.Drawable;
 import android.os.Bundle;
 import android.os.Message;
@@ -15,14 +14,12 @@ import android.util.Log;
 import android.view.Gravity;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.Button;
 import android.widget.FrameLayout;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.Toast;
 
-import com.baidu.mapapi.map.AbsBackgroundDrawNaviLayer;
-import com.baidu.mapapi.map.BackgroundDrawMapView;
+import com.baidu.mapapi.common.model.traffic.TrafficLightOutData;
 import com.baidu.mapapi.walknavi.WalkNavigateHelper;
 import com.baidu.mapapi.walknavi.adapter.IWNaviStatusListener;
 import com.baidu.mapapi.walknavi.adapter.IWRouteGuidanceListener;
@@ -38,8 +35,6 @@ public class WalkMultiActivity extends Activity {
     private final static String TAG = WalkMultiActivity.class.getSimpleName();
     private WalkNavigateHelper mNaviHelper;
     private MultiNaviViewProvider.IMultiNaviViewProxy mMultiNaviView;
-
-    private BackgroundDrawMapView mBackgroundDrawMapView;
 
     private ImageView mIvScreenshot;
 
@@ -79,65 +74,8 @@ public class WalkMultiActivity extends Activity {
                     mMultiNaviView.setDefaultLevel(18f);
                 }
 
-                // 添加后台绘制地图
-                mBackgroundDrawMapView = new BackgroundDrawMapView(this);
-                frameLayout.addView(mBackgroundDrawMapView, new FrameLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, 600));
-                // 绑定 view
-                mBackgroundDrawMapView.setVisibility(View.GONE);
-                if (mMultiNaviView != null) {
-                    mBackgroundDrawMapView.bindView(mMultiNaviView.getMapTextureView());
-//                    mBackgroundDrawMapView.bindView(mNaviHelper.getNaviMap().getMap().getGLMapView());
-                }
-
                 LinearLayout linearLayout = new LinearLayout(WalkMultiActivity.this);
                 linearLayout.setOrientation(LinearLayout.VERTICAL);
-
-                Button btnTest1 = new Button(WalkMultiActivity.this);
-                btnTest1.setText("测试进入后台导航");
-                linearLayout.addView(btnTest1, new ViewGroup.LayoutParams(ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT));
-                btnTest1.setOnClickListener(new View.OnClickListener() {
-                    @Override
-                    public void onClick(View v) {
-                        if (mMultiNaviView != null) {
-                            mMultiNaviView.onPause();
-//                            mNaviHelper.pause();
-                            mBackgroundDrawMapView.openBackgroundMap();
-//                            mNaviHelper.getNaviMap().getMap().getGLMapView().setSupBackgroundDraw(true);
-//                            mNaviHelper.getNaviMap().getMap().getGLMapView().onBackground();
-                            mBackgroundDrawMapView.setVisibility(View.VISIBLE);
-                            mNaviHelper.openBackgroundDrawNavi(WalkMultiActivity.this);
-                            AbsBackgroundDrawNaviLayer backgroundDrawNaviLayer = mNaviHelper.getBackgroundDrawNaviLayer();
-//                            backgroundDrawNaviLayer.setIsLocationDirectionFollowPhone(true);
-                            mBackgroundDrawMapView.addLayer(backgroundDrawNaviLayer);
-                            backgroundDrawNaviLayer.setEraseEffect(AbsBackgroundDrawNaviLayer.EraseEffect.ALREADY_PASSED_CHANGE_COLOR);
-
-                            Bitmap bitmap = mMultiNaviView.getMapTextureView().getBitmap();
-                            mIvScreenshot.setImageBitmap(bitmap);
-                            isInBackgroundDrawing = true;
-                        }
-                    }
-                });
-
-                Button btnTest2 = new Button(WalkMultiActivity.this);
-                btnTest2.setText("测试退出后台导航");
-                linearLayout.addView(btnTest2, new ViewGroup.LayoutParams(ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT));
-                btnTest2.setOnClickListener(new View.OnClickListener() {
-                    @Override
-                    public void onClick(View v) {
-                        if (mMultiNaviView != null) {
-                            mMultiNaviView.onResume();
-//                            mNaviHelper.resume();
-                            mBackgroundDrawMapView.closeBackgroundMap();
-//                            mNaviHelper.getNaviMap().getMap().getGLMapView().setSupBackgroundDraw(false);
-//                            mNaviHelper.getNaviMap().getMap().getGLMapView().onForeground();
-                            mBackgroundDrawMapView.setVisibility(View.GONE);
-                            AbsBackgroundDrawNaviLayer backgroundDrawNaviLayer = mNaviHelper.getBackgroundDrawNaviLayer();
-                            mBackgroundDrawMapView.removeLayer(backgroundDrawNaviLayer);
-                            mNaviHelper.closeBackgroundDrawNavi();
-                            isInBackgroundDrawing = false;
-                        }
-                    }
-                });
 
                 FrameLayout.LayoutParams linearLayoutParams = new FrameLayout.LayoutParams(ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT);
                 linearLayoutParams.gravity = Gravity.CENTER;
@@ -282,6 +220,11 @@ public class WalkMultiActivity extends Activity {
 
             @Override
             public void onSimpleMapInfoUpdate(WalkSimpleMapInfo info) {
+
+            }
+
+            @Override
+            public void onTrafficLightOutDataUpdate(TrafficLightOutData trafficLightOutData) {
 
             }
             @Override
