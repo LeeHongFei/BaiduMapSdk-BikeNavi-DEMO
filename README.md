@@ -90,15 +90,15 @@ mBackgroundDrawMapView.setNaviMapViewAllStatus(true);
 mBackgroundDrawMapView.setDefaultLevel(19);
 
 // 设置DPI缩放系数
-mBackgroundDrawMapView.setMapDpiScale(2);
+mBackgroundDrawMapView.setMapDpiScale(1);
 
 // 设置帧率
 mBackgroundDrawMapView.setFps(5);
 
-// 设置正北朝向
+// 设置正北朝向true 路线朝上 false 默认路线朝上
 mBackgroundDrawMapView.setNorthMode(true);
 
-// 设置车辆图标偏移
+// 设置车辆图标偏移 水平，垂直方向 单位 px
 mBackgroundDrawMapView.setCarOffset(0, 130);
 ```
 #### 地图自定义
