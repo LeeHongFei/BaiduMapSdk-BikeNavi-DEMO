@@ -30,6 +30,8 @@
 
 #### 参考BackgroundNaviService (后台导航服务)
 
+https://github.com/user-attachments/assets/8c008afa-cb36-4b4e-bbf3-bd8fdec60547
+
 实现流程
 
 1. 初始化阶段
@@ -126,6 +128,9 @@ boolean success = WalkNavigateHelper.getInstance().startBkgNavi(
 
 1. **权限检查**：启动前必须验证多实例地图权限
 2. **内存管理**：服务销毁时需要释放地图资源
+
+
+
 
 
 ## 文档pdf
