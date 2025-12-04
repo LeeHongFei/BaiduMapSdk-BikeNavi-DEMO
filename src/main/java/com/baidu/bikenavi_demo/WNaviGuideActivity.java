@@ -11,6 +11,7 @@ import com.baidu.platform.comapi.walknavi.WalkNaviModeSwitchListener;
 import com.baidu.platform.comapi.walknavi.widget.ArCameraView;
 
 import android.app.Activity;
+import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.os.Bundle;
 import android.util.Log;
@@ -45,6 +46,10 @@ public class WNaviGuideActivity extends Activity {
 
     private WalkNavigateHelper mNaviHelper;
     private boolean isViewAll = false;
+
+    public static void startActivity(Activity bNaviMainActivity) {
+        bNaviMainActivity.startActivity(new Intent(bNaviMainActivity, WNaviGuideActivity.class));
+    }
 
     @Override
     protected void onDestroy() {

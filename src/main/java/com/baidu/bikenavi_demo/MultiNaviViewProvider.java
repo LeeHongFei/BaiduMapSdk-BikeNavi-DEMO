@@ -202,6 +202,16 @@ public class MultiNaviViewProvider {
             this.mMultiNaviView.showPoiMark(isShow);
 
         }
+
+        @Override
+        public void setNaviMapMargin(int l, int t, int r, int b) {
+            this.mMultiNaviView.setNaviMapMargin(l, t, r, b);
+        }
+
+        @Override
+        public void setNaviMapViewAllStatus(boolean isNaviMapViewAllStatus) {
+            this.mMultiNaviView.setNaviMapViewAllStatus(isNaviMapViewAllStatus);
+        }
         //        @Override
 //        public boolean setBackgroundDrawFps(int fps) {
 //            return this.mMultiNaviView.setBackgroundDrawFps(fps);

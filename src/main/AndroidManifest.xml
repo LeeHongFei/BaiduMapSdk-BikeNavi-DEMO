@@ -36,7 +36,7 @@
 
         <meta-data
             android:name="com.baidu.lbsapi.API_KEY"
-            android:value="**********************" />
+            android:value="**********开放平台申请AK************" />
 
         <service
             android:name="com.baidu.location.f"
@@ -72,6 +72,7 @@
             android:name="com.baidu.bikenavi_demo.BikeMultipleRoute2Activity"
             android:screenOrientation="portrait" />
         <service android:name=".floating.FloatingWindowService"/>
+        <service android:name=".BackgroundNaviService"/>
     </application>
 
 </manifest>

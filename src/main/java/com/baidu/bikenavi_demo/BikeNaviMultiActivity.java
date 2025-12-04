@@ -13,13 +13,13 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.FrameLayout;
 
-import com.baidu.bikenavi_demo.floating.ComObservable;
 import com.baidu.mapapi.bikenavi.BikeNavigateHelper;
 import com.baidu.mapapi.bikenavi.adapter.IBRouteGuidanceListener;
 import com.baidu.mapapi.bikenavi.model.BikeNaviDisplayOption;
 import com.baidu.mapapi.bikenavi.model.BikeRouteDetailInfo;
 import com.baidu.mapapi.bikenavi.model.IBRouteIconInfo;
 import com.baidu.mapapi.bikenavi.params.BikeNaviLaunchParam;
+import com.baidu.mapapi.common.model.traffic.TrafficLightOutData;
 import com.baidu.mapapi.walknavi.model.RouteGuideKind;
 import com.baidu.platform.comapi.wnplatform.mulitmap.IMultiNaviView;
 
@@ -181,6 +181,11 @@ public class BikeNaviMultiActivity extends Activity {
 
             @Override
             public void onNaviLocationUpdate() {
+
+            }
+
+            @Override
+            public void onTrafficLightOutDataUpdate(TrafficLightOutData trafficLightOutData) {
 
             }
 

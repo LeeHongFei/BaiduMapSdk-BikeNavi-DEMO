@@ -3,23 +3,15 @@
  */
 package com.baidu.bikenavi_demo;
 
-import com.baidu.bikenavi_demo.floating.ComObservable;
 import com.baidu.mapapi.bikenavi.BikeNavigateHelper;
 import com.baidu.mapapi.bikenavi.adapter.IBNaviStatusListener;
-import com.baidu.mapapi.bikenavi.adapter.IBRouteGuidanceListener;
 import com.baidu.mapapi.bikenavi.adapter.IBTTSPlayer;
 import com.baidu.mapapi.bikenavi.model.BikeNaviDisplayOption;
-import com.baidu.mapapi.bikenavi.model.BikeRouteDetailInfo;
-import com.baidu.mapapi.bikenavi.model.IBRouteIconInfo;
 import com.baidu.mapapi.bikenavi.params.BikeNaviLaunchParam;
-import com.baidu.mapapi.map.LogoPosition;
-import com.baidu.mapapi.tts.WNTTSManager;
-import com.baidu.mapapi.walknavi.model.RouteGuideKind;
 
 import android.app.Activity;
 import android.content.Context;
 import android.content.Intent;
-import android.graphics.drawable.Drawable;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.View;
