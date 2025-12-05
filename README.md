@@ -133,7 +133,7 @@ boolean success = WalkNavigateHelper.getInstance().startBkgNavi(
 
 
 
-## 文档pdf
+## 图像投屏文档pdf
 [投屏接口文档.pdf](https://github.com/user-attachments/files/22022365/default.pdf)
 
 
